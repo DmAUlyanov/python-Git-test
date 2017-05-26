@@ -1,0 +1,221 @@
+import java.util.regex.Pattern
+
+ext.generalMajorVersion = 1
+
+ext.buildGradlePath = "automapgs/build.gradle"
+//in build.gradle
+ext.buildGradlePatternVersionName = Pattern.compile("currentVersionName = \'(\\d+)\\.(\\d+)\\.?(\\d+)?\'")
+//in file
+ext.betaPatternVersionName = Pattern.compile("betaVersionName = \'(\\d+)\\.(\\d+)\\.?(\\d+)?\'")
+ext.rcPatternVersionName = Pattern.compile("rcVersionName = \'(\\d+)\\.(\\d+)\\.?(\\d+)?\'")
+ext.releasePatternVersionName = Pattern.compile("releaseVersionName = \'(\\d+)\\.(\\d+)\\.?(\\d+)?\'")
+
+
+task incrementVersionCode << {
+    incrementVersionCode("../../versionsFiles/versions" + versionsFilePostfix + ".txt")
+}
+
+task saveVersionCodeRekod << {
+    saveVersionCodeRekod("../../versionsFiles/versions" + versionsFilePostfix + ".txt")
+}
+
+task incrementBetaVersionName << {
+    incrementBetaVersionName("../../versionsFiles/versions" + versionsFilePostfix + ".txt")
+}
+
+task saveBetaVersionName << {
+    saveBetaVersionName("../../versionsFiles/versions" + versionsFilePostfix + ".txt")
+}
+
+task incrementRcVersionName << {
+    incrementRcVersionName("../../versionsFiles/versions" + versionsFilePostfix + ".txt")
+}
+
+task saveRcVersionName << {
+    saveRcVersionName("../../versionsFiles/versions" + versionsFilePostfix + ".txt")
+}
+
+task saveReleaseVersion << {
+    saveReleaseVersion("../../versionsFiles/versions" + versionsFilePostfix + ".txt")
+}
+
+def incrementVersionCode(def filePath) {
+    println(":incrementVersionCode - Incrementing Version Code...")
+    def patternVersionCode = Pattern.compile("versionCode (\\d+)")
+
+    def buildFile = file(buildGradlePath)
+    def matcherVersionCode = patternVersionCode.matcher(buildFile.getText())
+    matcherVersionCode.find()
+
+
+    def versionCodeFile = file(filePath)
+    def matcherVersionCodeFile = patternVersionCode.matcher(versionCodeFile.getText())
+    matcherVersionCodeFile.find()
+
+
+    def mVersionCode = Integer.parseInt(matcherVersionCodeFile.group(1))
+    def mNextVersionCode = mVersionCode + 1
+    def versionCodeContent = matcherVersionCode.replaceAll("versionCode " + mNextVersionCode)
+    println(":incrementVersionCode - current versionCode = " + mVersionCode);
+    println(":incrementVersionCode - next versionCode = " + mNextVersionCode);
+    buildFile.write(versionCodeContent)
+}
+
+def saveVersionCode(def filePath) {
+    println(":saveVersionCode - Saving Version Code...")
+    def patternVersionCode = Pattern.compile("versionCode (\\d+)")
+
+
+    def buildFile = file(buildGradlePath)
+
+    def matcherVersionCode = patternVersionCode.matcher(buildFile.getText())
+    matcherVersionCode.find()
+
+
+    def versionCodeFile = file(filePath)
+    def matcherVersionCodeFile = patternVersionCode.matcher(versionCodeFile.getText())
+    matcherVersionCodeFile.find()
+
+
+    def mVersionCode = Integer.parseInt(matcherVersionCode.group(1))
+    def versionCodeContentFile = matcherVersionCodeFile.replaceAll("versionCode " + mVersionCode)
+    versionCodeFile.write(versionCodeContentFile)
+}
+
+def incrementBetaVersionName(def filePath) {
+    println(":incrementVersionName - Incrementing Version Name...")
+    def buildGradleFile = file(buildGradlePath)
+    def buildText = buildGradleFile.getText()
+    def matcherVersionName = buildGradlePatternVersionName.matcher(buildText)
+    matcherVersionName.find()
+
+    def fileWithVersionsText = file(filePath).getText()
+
+    def betaMatcherVersionNameFile = betaPatternVersionName.matcher(fileWithVersionsText)
+    betaMatcherVersionNameFile.find()
+
+    def betaMajorVersion = Integer.parseInt(betaMatcherVersionNameFile.group(1))
+    def betaMinorVersion = Integer.parseInt(betaMatcherVersionNameFile.group(2))
+    def betaBuildVersion = Integer.parseInt(betaMatcherVersionNameFile.group(3))
+
+    def mNextVersionName
+
+    if (generalMajorVersion != betaMajorVersion) {
+        mNextVersionName = generalMajorVersion + ".0.1"
+    } else {
+        def rcMatcherVersionNameFile = rcPatternVersionName.matcher(fileWithVersionsText)
+        rcMatcherVersionNameFile.find()
+        def rcMinorVersion = Integer.parseInt(rcMatcherVersionNameFile.group(2))
+        if (rcMinorVersion != betaMinorVersion) {
+            mNextVersionName = betaMajorVersion + "." + rcMinorVersion + ".1"
+        } else {
+            mNextVersionName = betaMajorVersion + "." + betaMinorVersion + "." + (betaBuildVersion + 1)
+        }
+    }
+    def mVersionName = betaMajorVersion + "." + betaMinorVersion + "." + betaBuildVersion
+    def buildContent = matcherVersionName.replaceAll("currentVersionName = \'" + mNextVersionName + "\'")
+
+    println(":incrementVersionName - current versionName = " + mVersionName);
+    println(":incrementVersionName - new versionName = " + mNextVersionName);
+    buildGradleFile.write(buildContent)
+}
+
+def saveBetaVersionName(def filePath){
+    println(":saveVersionName - Saving Version Name...")
+
+    def buildFileText = file(buildGradlePath).getText()
+    def matcherVersionName = buildGradlePatternVersionName.matcher(buildFileText)
+    matcherVersionName.find()
+
+    def versionNameFile = file(filePath)
+    def matcherVersionNameFile = betaPatternVersionName.matcher(versionNameFile.getText())
+    matcherVersionNameFile.find()
+
+    def majorVersion = Integer.parseInt(matcherVersionName.group(1))
+    def minorVersion = Integer.parseInt(matcherVersionName.group(2))
+    def buildVersion = Integer.parseInt(matcherVersionName.group(3))
+
+    def mVersionName = majorVersion + "." + minorVersion + "." + buildVersion
+
+    def versionNameFileContent = matcherVersionNameFile.replaceAll("betaVersionName = \'" + mVersionName + "\'")
+
+    versionNameFile.write(versionNameFileContent)
+}
+
+def incrementRcVersionName(def filePath){
+    println(":incrementVersionName - Incrementing Version Name...")
+    def buildGradleFile = file(buildGradlePath)
+    def buildText = buildGradleFile.getText()
+    def matcherVersionName = buildGradlePatternVersionName.matcher(buildText)
+    matcherVersionName.find()
+
+    def fileWithVersionsText = file(filePath).getText()
+
+    def rcPatternVersionNameFile = rcPatternVersionName.matcher(fileWithVersionsText)
+    rcPatternVersionNameFile.find()
+
+    def rcMajorVersion = Integer.parseInt(rcPatternVersionNameFile.group(1))
+    def rcMinorVersion = Integer.parseInt(rcPatternVersionNameFile.group(2))
+
+    def mNextVersionName
+
+    if (generalMajorVersion != rcMajorVersion) {
+        mNextVersionName = generalMajorVersion + ".0"
+    } else {
+        def releaseMatcherVersionNameFile = releasePatternVersionName.matcher(fileWithVersionsText)
+        releaseMatcherVersionNameFile.find()
+        def releaseMinorVersion = Integer.parseInt(releaseMatcherVersionNameFile.group(2))
+        if (rcMinorVersion != releaseMinorVersion) {
+            mNextVersionName = rcMajorVersion + "." + rcMinorVersion
+        } else {
+            mNextVersionName = rcMajorVersion + "." + (rcMinorVersion + 1)
+        }
+    }
+    def mVersionName = rcMajorVersion + "." + rcMinorVersion
+    def buildContent = matcherVersionName.replaceAll("currentVersionName = \'" + mNextVersionName + "\'")
+
+    println(":incrementVersionName - current versionName = " + mVersionName);
+    println(":incrementVersionName - new versionName = " + mNextVersionName);
+    buildGradleFile.write(buildContent)
+}
+
+def saveRcVersionName(def filePath){
+    println(":saveVersionName - Saving Version Name...")
+    def buildFile = file(buildGradlePath)
+
+    def matcherVersionName = buildGradlePatternVersionName.matcher(buildFile.getText())
+    matcherVersionName.find()
+
+    def versionNameFile = file(filePath)
+    def matcherVersionNameFile = rcPatternVersionName.matcher(versionNameFile.getText())
+    matcherVersionNameFile.find()
+
+    def majorVersion = Integer.parseInt(matcherVersionName.group(1))
+    def minorVersion = Integer.parseInt(matcherVersionName.group(2))
+
+    def mVersionName = majorVersion + "." + minorVersion
+
+    def versionNameFileContent = matcherVersionNameFile.replaceAll("rcVersionName = \'" + mVersionName + "\'")
+    versionNameFile.write(versionNameFileContent)
+}
+
+def saveReleaseVersionName(def filePath){
+    println(":saveVersionName - Saving Version Name...")
+
+    def versionNameFile = file(filePath)
+
+    def versionNameFileText = versionNameFile.getText()
+    def matcherReleaseVersionNameFile = releasePatternVersionName.matcher(versionNameFileText)
+    matcherReleaseVersionNameFile.find()
+
+    def matcherRcVersionNameFile = rcPatternVersionName.matcher(versionNameFileText)
+    matcherRcVersionNameFile.find()
+
+    def majorVersion = Integer.parseInt(matcherRcVersionNameFile.group(1))
+    def minorVersion = Integer.parseInt(matcherRcVersionNameFile.group(2))
+
+    def mVersionName = majorVersion + "." + minorVersion
+
+    def versionNameFileContent = matcherReleaseVersionNameFile.replaceAll("releaseVersionName = \'" + mVersionName + "\'")
+    versionNameFile.write(versionNameFileContent)
+}

@@ -1,0 +1,5 @@
+repoes/
+.idea
+__pycache__
+config.py
+Data.py
