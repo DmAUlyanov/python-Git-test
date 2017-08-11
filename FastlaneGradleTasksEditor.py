@@ -8,12 +8,12 @@ def read_fastlane_gradle_tasks(localRepoPath):
 
 def edit_fastlane_gradle_tasks(localRepoPath):
     curFastlaneGradleTasksText = read_fastlane_gradle_tasks(localRepoPath)
-    curGeneralMajorVersion = re.search(r'ext.generalMajorVersion = [^\n]*', curFastlaneGradleTasksText).group()
-    curBuildGradlePath = re.search(r'ext.buildGradlePath = [^\n]*', curFastlaneGradleTasksText).group()
+    curGeneralMajorVersion = re.search(r'generalMajorVersion = [^\n]*', curFastlaneGradleTasksText).group()
+    curBuildGradlePath = re.search(r'buildGradlePath = [^\n]*', curFastlaneGradleTasksText).group()
 
     referenceFastfile = open('fastlane_gradle_tasks.gradle').read()
-    defaultGeneralMajorVersion = re.search(r'ext.generalMajorVersion = [^\n]*', curFastlaneGradleTasksText).group()
-    defaultBuildGradlePath = re.search(r'ext.buildGradlePath = [^\n]*', curFastlaneGradleTasksText).group()
+    defaultGeneralMajorVersion = re.search(r'generalMajorVersion = [^\n]*', referenceFastfile).group()
+    defaultBuildGradlePath = re.search(r'buildGradlePath = [^\n]*', referenceFastfile).group()
     curFastlaneGradleTasksText = referenceFastfile.replace(defaultGeneralMajorVersion, curGeneralMajorVersion)
     curFastlaneGradleTasksText = curFastlaneGradleTasksText.replace(defaultBuildGradlePath, curBuildGradlePath)
 

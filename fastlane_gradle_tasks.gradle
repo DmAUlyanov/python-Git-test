@@ -1,13 +1,13 @@
 import java.util.regex.Pattern
 
-ext.generalMajorVersion = 1
+ext.generalMajorVersion = 2
 
-ext.buildGradlePath = "automapgs/build.gradle"
+ext.buildGradlePath = "app/build.gradle"
 //in build.gradle
 ext.buildGradlePatternVersionName = Pattern.compile("currentVersionName = \'(\\d+)\\.(\\d+)\\.?(\\d+)?\'")
 //in file
 ext.betaPatternVersionName = Pattern.compile("betaVersionName = \'(\\d+)\\.(\\d+)\\.?(\\d+)?\'")
-ext.rcPatternVersionName = Pattern.compile("rcVersionName = \'(\\d+)\\.(\\d+)\\.?(\\d+)?\'")
+ext.rcPatternVersionName = Pattern.compile("rcVersionName = \'(\\d+)\\.(\\d+)\\.?(\\d+)?\\((\\d+)\\)\'")
 ext.releasePatternVersionName = Pattern.compile("releaseVersionName = \'(\\d+)\\.(\\d+)\\.?(\\d+)?\'")
 
 
@@ -15,8 +15,8 @@ task incrementVersionCode << {
     incrementVersionCode("../../versionsFiles/versions" + versionsFilePostfix + ".txt")
 }
 
-task saveVersionCodeRekod << {
-    saveVersionCodeRekod("../../versionsFiles/versions" + versionsFilePostfix + ".txt")
+task saveVersionCode << {
+    saveVersionCode("../../versionsFiles/versions" + versionsFilePostfix + ".txt")
 }
 
 task incrementBetaVersionName << {
@@ -35,8 +35,12 @@ task saveRcVersionName << {
     saveRcVersionName("../../versionsFiles/versions" + versionsFilePostfix + ".txt")
 }
 
-task saveReleaseVersion << {
-    saveReleaseVersion("../../versionsFiles/versions" + versionsFilePostfix + ".txt")
+task saveReleaseVersionName << {
+    saveReleaseVersionName("../../versionsFiles/versions" + versionsFilePostfix + ".txt")
+}
+
+task saveObbFileInfo << {
+	saveObbFileInfo("../../versionsFiles/versions" + versionsFilePostfix + ".txt", obbType, obbVersion, obbSize)
 }
 
 def incrementVersionCode(def filePath) {
@@ -160,7 +164,7 @@ def incrementRcVersionName(def filePath){
     def mNextVersionName
 
     if (generalMajorVersion != rcMajorVersion) {
-        mNextVersionName = generalMajorVersion + ".0"
+        mNextVersionName = generalMajorVersion + ".0(0)"
     } else {
         def releaseMatcherVersionNameFile = releasePatternVersionName.matcher(fileWithVersionsText)
         releaseMatcherVersionNameFile.find()
@@ -192,8 +196,10 @@ def saveRcVersionName(def filePath){
 
     def majorVersion = Integer.parseInt(matcherVersionName.group(1))
     def minorVersion = Integer.parseInt(matcherVersionName.group(2))
+    
+    def rcBuildNumber = Integer.parseInt(matcherVersionNameFile.group(4))
 
-    def mVersionName = majorVersion + "." + minorVersion
+    def mVersionName = majorVersion + "." + minorVersion + "(" + (rcBuildNumber+1) + ")"
 
     def versionNameFileContent = matcherVersionNameFile.replaceAll("rcVersionName = \'" + mVersionName + "\'")
     versionNameFile.write(versionNameFileContent)
@@ -217,5 +223,26 @@ def saveReleaseVersionName(def filePath){
     def mVersionName = majorVersion + "." + minorVersion
 
     def versionNameFileContent = matcherReleaseVersionNameFile.replaceAll("releaseVersionName = \'" + mVersionName + "\'")
+    
+    //set rc build number to 0   
+    matcherRcVersionNameFile = rcPatternVersionName.matcher(versionNameFileContent)
+    matcherRcVersionNameFile.find()    
+    def rcVersionName = majorVersion + "." + minorVersion + "(0)"
+    versionNameFileContent = matcherRcVersionNameFile.replaceAll("rcVersionName = \'" + rcVersionName + "\'")
     versionNameFile.write(versionNameFileContent)
+}
+
+def saveObbFileInfo(def filepath, def obbType, def obbVersion, def obbSize){
+	obbVersionPattern = Pattern.compile(obbType + "ObbFileVersion = (\\d+)")
+	obbSizePattern = Pattern.compile(obbType + "ObbFileSize = (\\d+)")
+	
+	def versionNameFile = file(filePath)
+	def obbVersionMatcher = obbVersionPattern.matcher(versionNameFile.getText())
+	obbVersionMatcher.find()
+	def versionNameFileContent = obbVersionMatcher.replaceAll(obbType + "ObbFileVersion = " + obbVersion)
+	
+	def obbSizeMatcher = obbSizePattern.matcher(versionNameFileContent)
+	obbSizeMatcher.find()
+	versionNameFileContent = obbSizeMatcher.replaceAll(obbType + "ObbFileSize = " + obbSize)
+	versionNameFile.write(versionNameFileContent)
 }

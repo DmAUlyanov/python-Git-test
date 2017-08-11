@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import re
 import json
 from os import listdir
@@ -24,31 +25,44 @@ def edit_env_file(filePath):
     content = file.readlines()
     paramsDict = {
         'project_name': '',
-        'alias': '',
-        'flavor': '',
         'app_id': '',
         'package_name': '',
+        'alias': '',
+        'flavor': '',
         'versionsFilePostfix': '',
         'metadata_dir': '',
         'json_key_file': '',
         'test_group_for_fabric': '',
         'CRASHLYTICS_API_TOKEN': '',
-        'CRASHLYTICS_BUILD_SECRET': ''
+        'CRASHLYTICS_BUILD_SECRET': '',
+        'locales': '"ru-RU, en-US"'
     }
     for line in content:
-        key, value = re.split(r' *= *', line)
-        if key in paramsDict.keys():
-            paramsDict[key] = value[:len(value)-1]
-
-    externalData = get_by_storeIdentificator(paramsDict['package_name'].strip('"'))
+        if line.strip() != '':
+            key, value = re.split(r' *= *', line)
+            if key in paramsDict.keys():
+                paramsDict[key] = value.strip('\n')
+    if paramsDict['app_id'] == '':
+        paramsDict['app_id'] = paramsDict['package_name']
+    del paramsDict['package_name']
+    paramsDict['app_id'] = paramsDict['app_id'].replace(".beta", "")
+    externalData = get_by_storeIdentificator(paramsDict['app_id'].strip('"')) #в старых .env к app_id приписана .beta
     paramsDict.update(externalData)
+
+    if paramsDict['flavor'] == '':
+        del paramsDict['flavor']
+
     if '.beta' in filePath:
         del paramsDict['metadata_dir']
+        del paramsDict['locales']
     elif '.release' in filePath:
         del paramsDict['test_group_for_fabric']
         del paramsDict['CRASHLYTICS_API_TOKEN']
         del paramsDict['CRASHLYTICS_BUILD_SECRET']
-        paramsDict['metadata_dir'] = '"metadata.{0}"'.format(paramsDict['flavor'].strip('"'))
+        if 'flavor' in paramsDict.keys():
+            paramsDict['metadata_dir'] = '"metadata.{0}"'.format(paramsDict['flavor'].strip('"'))
+        else:
+            paramsDict['metadata_dir'] = '"metadata"'
     file.close()
     save_params(filePath, paramsDict)
 

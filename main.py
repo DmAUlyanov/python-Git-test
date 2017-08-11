@@ -32,16 +32,16 @@ def work_with_git(paths, *functions):
     for path in paths:
         localRepoPath = 'repoes/{0}'.format(path)
 
-        if os.path.exists(localRepoPath):
-            delete_not_empty_directory(localRepoPath)
+        #if os.path.exists(localRepoPath):
+        #    delete_not_empty_directory(localRepoPath)
 
-        Repo.clone_from(url='https://{login}:{password}@git.geo4.pro/{path}.git'.format(login=config.user,
-                                                                                                    password=config.pwd,
-                                                                                                    path=path),
-                            to_path=localRepoPath, branch='dev', progress=Progress())
+        #Repo.clone_from(url='https://{login}:{password}@git.geo4.pro/{path}.git'.format(login=config.user,
+        #                                                                                            password=config.pwd,
+        #                                                                                            path=path),
+        #                    to_path=localRepoPath, branch='dev', progress=Progress())
 
-        for func in functions:
-            func(localRepoPath)
+        #for func in functions:
+        #    func(localRepoPath)
 
         repo = Repo(localRepoPath)
         repo.git.add('.')
@@ -51,5 +51,4 @@ def work_with_git(paths, *functions):
 
 
 
-work_with_git(Data.paths[-2:-1], FastfileEditor.edit_fastfile, EnviromentEditor.edit,
-              FastlaneGradleTasksEditor.edit_fastlane_gradle_tasks)
+work_with_git(Data.paths, FastfileEditor.edit_fastfile)#, #FastlaneGradleTasksEditor.edit_fastlane_gradle_tasks)#, EnviromentEditor.edit, FastlaneGradleTasksEditor.edit_fastlane_gradle_tasks)
